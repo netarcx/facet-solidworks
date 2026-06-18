@@ -13,31 +13,43 @@ namespace Facet.AddIn
     {
         private readonly ISldWorks _app;
         private readonly MainThreadDispatcher _dispatcher;
+        private readonly Action<string> _log;
 
-        public CommandRunner(ISldWorks app, MainThreadDispatcher dispatcher)
+        public CommandRunner(ISldWorks app, MainThreadDispatcher dispatcher, Action<string> log)
         {
             _app = app;
             _dispatcher = dispatcher;
+            _log = log;
         }
 
-        /// <summary>Resolve and run the command described by an inbound invoke. Returns success.</summary>
+        /// <summary>
+        /// Resolve and dispatch the command. Returns true once the command is handed to the
+        /// SolidWorks thread (RunCommand runs asynchronously there and may block on its own UI, so
+        /// we must NOT wait on it from the WebSocket thread). The actual RunCommand result is logged.
+        /// </summary>
         public bool Run(InboundMessage invoke)
         {
-            if (!TryResolveCommandId(invoke, out int id)) return false;
+            if (!TryResolveCommandId(invoke, out int id))
+            {
+                _log($"Facet: command not resolved: '{invoke.Command}' (commandId={invoke.CommandId})");
+                return false;
+            }
 
-            // RunCommand must run on the STA thread that owns the SolidWorks app object.
-            return _dispatcher.Invoke(() =>
+            _log($"Facet: dispatching '{invoke.Command}' (id={id}) to SolidWorks thread");
+            _dispatcher.Post(() =>
             {
                 try
                 {
                     // Returns false if the command id is unknown or currently unavailable.
-                    return _app.RunCommand(id, string.Empty);
+                    bool ok = _app.RunCommand(id, string.Empty);
+                    _log($"Facet: RunCommand('{invoke.Command}', id={id}) returned {ok}");
                 }
-                catch
+                catch (Exception ex)
                 {
-                    return false;
+                    _log($"Facet: RunCommand('{invoke.Command}', id={id}) threw: {ex.Message}");
                 }
             });
+            return true; // dispatched; execution happens asynchronously on the UI thread
         }
 
         private static bool TryResolveCommandId(InboundMessage invoke, out int id)

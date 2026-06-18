@@ -42,7 +42,7 @@ namespace Facet.AddIn
             {
                 // Marshaler must be created on this (SolidWorks main/STA) thread.
                 _dispatcher = new MainThreadDispatcher();
-                var runner = new CommandRunner(_app, _dispatcher);
+                var runner = new CommandRunner(_app, _dispatcher, LogToSolidWorks);
 
                 _server = new WsServer
                 {

@@ -46,6 +46,22 @@ namespace Facet.AddIn
             catch (InvalidOperationException) { }
         }
 
+        /// <summary>
+        /// Fire-and-forget marshal onto the SolidWorks thread (non-blocking). Use this for actions
+        /// like RunCommand that may not return until the user dismisses a PropertyManager page —
+        /// blocking the caller on those would stall the WebSocket pump.
+        /// </summary>
+        public void Post(Action action)
+        {
+            if (_marshal.IsDisposed || !_marshal.IsHandleCreated) return;
+            try
+            {
+                _marshal.BeginInvoke(action);
+            }
+            catch (ObjectDisposedException) { }
+            catch (InvalidOperationException) { }
+        }
+
         public void Dispose()
         {
             if (_marshal.IsHandleCreated && !_marshal.IsDisposed)

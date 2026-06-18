@@ -143,15 +143,16 @@ namespace Facet.AddIn
 
         private async Task ReceivePumpAsync(ClientConn conn)
         {
+            Log?.Invoke("Facet: receive pump started");
             var buffer = new byte[8192];
             var sb = new StringBuilder();
             while (!conn.Token.IsCancellationRequested && conn.Socket.State == WebSocketState.Open)
             {
                 WebSocketReceiveResult result;
                 try { result = await conn.Socket.ReceiveAsync(new ArraySegment<byte>(buffer), conn.Token).ConfigureAwait(false); }
-                catch { break; }
+                catch (Exception ex) { Log?.Invoke($"Facet: receive pump ended: {ex.GetType().Name} {ex.Message}"); break; }
 
-                if (result.MessageType == WebSocketMessageType.Close) break;
+                if (result.MessageType == WebSocketMessageType.Close) { Log?.Invoke("Facet: received Close frame"); break; }
                 sb.Append(Encoding.UTF8.GetString(buffer, 0, result.Count));
                 if (!result.EndOfMessage) continue;
 
@@ -163,6 +164,7 @@ namespace Facet.AddIn
 
         private void HandleInbound(ClientConn conn, string json)
         {
+            Log?.Invoke($"Facet: inbound {(json.Length > 120 ? json.Substring(0, 120) : json)}");
             InboundMessage? msg;
             try { msg = WireProtocol.Parse(json); }
             catch { return; } // malformed message must never kill the pump
@@ -197,10 +199,16 @@ namespace Facet.AddIn
             _cts.Dispose();
         }
 
-        /// <summary>One connected plugin. Serializes sends through an internal queue; idempotent dispose.</summary>
+        /// <summary>
+        /// One connected plugin. The send pump is FULLY ASYNC (a SemaphoreSlim signal over a
+        /// ConcurrentQueue) — it must never block a thread, because a blocked send on the .NET
+        /// HttpListener WebSocket starves the concurrent receive on the same (full-duplex) socket.
+        /// </summary>
         private sealed class ClientConn : IDisposable
         {
-            private readonly BlockingCollection<string> _outbox = new BlockingCollection<string>(new ConcurrentQueue<string>());
+            private readonly ConcurrentQueue<string> _queue = new ConcurrentQueue<string>();
+            private readonly SemaphoreSlim _signal = new SemaphoreSlim(0);
+            private volatile bool _sendClosed;
             private int _disposed;
 
             public Guid Id { get; } = Guid.NewGuid();
@@ -215,27 +223,32 @@ namespace Facet.AddIn
 
             public void Enqueue(string json)
             {
-                // Racing against CompleteAdding/Dispose is expected; swallow the resulting throw.
-                try { if (!_outbox.IsAddingCompleted) _outbox.Add(json); }
-                catch (ObjectDisposedException) { } // derives from InvalidOperationException — must come first
-                catch (InvalidOperationException) { }
+                if (_sendClosed) return;
+                _queue.Enqueue(json);
+                try { _signal.Release(); } catch (ObjectDisposedException) { } catch (SemaphoreFullException) { }
             }
 
-            /// <summary>Stop accepting new sends and let the send pump drain to completion.</summary>
+            /// <summary>Stop accepting new sends and wake the pump so it can exit.</summary>
             public void CompleteSend()
             {
-                try { _outbox.CompleteAdding(); } catch { }
+                _sendClosed = true;
+                try { _signal.Release(); } catch { }
             }
 
             public async Task SendPumpAsync()
             {
                 try
                 {
-                    foreach (var json in _outbox.GetConsumingEnumerable(Token))
+                    while (!Token.IsCancellationRequested)
                     {
-                        if (Socket.State != WebSocketState.Open) break;
-                        var bytes = Encoding.UTF8.GetBytes(json);
-                        await Socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, Token).ConfigureAwait(false);
+                        await _signal.WaitAsync(Token).ConfigureAwait(false); // async — does not hold a thread
+                        while (_queue.TryDequeue(out var json))
+                        {
+                            if (Socket.State != WebSocketState.Open) return;
+                            var bytes = Encoding.UTF8.GetBytes(json);
+                            await Socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, Token).ConfigureAwait(false);
+                        }
+                        if (_sendClosed) return;
                     }
                 }
                 catch { /* cancelled or socket closed */ }
@@ -244,11 +257,11 @@ namespace Facet.AddIn
             public void Dispose()
             {
                 if (Interlocked.Exchange(ref _disposed, 1) != 0) return; // idempotent
-                try { _outbox.CompleteAdding(); } catch { }
+                _sendClosed = true;
                 // Abort rather than CloseAsync: teardown must never block on a peer handshake.
                 try { Socket.Abort(); } catch { }
                 try { Socket.Dispose(); } catch { }
-                try { _outbox.Dispose(); } catch { }
+                try { _signal.Dispose(); } catch { }
             }
         }
     }
