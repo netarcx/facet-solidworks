@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Facet command catalog",
+  "type": "object",
+  "required": ["meta", "layouts"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["version", "device", "grid"],
+      "properties": {
+        "version": { "type": "integer" },
+        "device": { "type": "string" },
+        "grid": {
+          "type": "object",
+          "required": ["cols", "rows", "slots"],
+          "properties": {
+            "cols": { "type": "integer" },
+            "rows": { "type": "integer" },
+            "slots": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "layouts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["title", "slots"],
+        "properties": {
+          "title": { "type": "string" },
+          "extends": { "type": "string" },
+          "slots": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/binding" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "binding": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["home", "more", "command", "new", "info", "empty"] },
+        "label": { "type": "string" },
+        "swCommand": { "type": "string", "description": "swCommands_e enum name" },
+        "commandId": { "type": ["integer", "null"], "description": "raw int fallback id" },
+        "icon": { "type": "string" },
+        "accent": { "type": "boolean" },
+        "toggle": { "type": "boolean" },
+        "commit": { "type": "boolean", "description": "primary commit action (e.g. Exit Sketch)" }
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "facet-tools",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Dev tools for Facet — a mock SolidWorks add-in server for testing the plugin without SolidWorks.",
+  "scripts": {
+    "mock": "node mock-addin.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

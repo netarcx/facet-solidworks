@@ -1,0 +1,18 @@
+# Normalize text line endings; let Git pick working-tree EOL per platform.
+* text=auto
+
+# Windows-native tooling expects CRLF.
+*.ps1   text eol=crlf
+*.iss   text eol=crlf
+*.csproj text eol=crlf
+*.cs    text eol=crlf
+
+# Cross-platform scripts/sources stay LF.
+*.ts    text eol=lf
+*.mjs   text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+
+# Binary assets.
+*.png   binary
+*.streamDeckPlugin binary

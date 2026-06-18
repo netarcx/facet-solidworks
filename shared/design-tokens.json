@@ -1,0 +1,32 @@
+{
+  "$comment": "Facet visual design language. One accent, dark canvas, one stroke weight. The plugin renders keys from these tokens so the deck looks consistent before bespoke glyphs land.",
+  "color": {
+    "canvas":        "#0B0E13",
+    "canvasRaised":  "#141A22",
+    "ink":           "#F2F5F8",
+    "inkMuted":      "#8A95A3",
+    "accent":        "#3B82F6",
+    "accentInk":     "#FFFFFF",
+    "commit":        "#22C55E",
+    "toggleOn":      "#3B82F6",
+    "toggleOnInk":   "#FFFFFF",
+    "warn":          "#F59E0B",
+    "ok":            "#22C55E",
+    "hairline":      "#222B36"
+  },
+  "stroke": { "weight": 2, "cap": "round", "join": "round" },
+  "type": {
+    "family": "-apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif",
+    "labelSize": 15,
+    "labelWeight": 600,
+    "homeTitleSize": 16,
+    "tracking": 0.2
+  },
+  "key": {
+    "size": 144,
+    "radius": 18,
+    "padding": 12,
+    "iconSize": 56
+  },
+  "motion": { "repaintFadeMs": 120, "okFlashMs": 350 }
+}

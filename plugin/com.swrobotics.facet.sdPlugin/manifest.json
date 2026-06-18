@@ -1,0 +1,46 @@
+{
+	"$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+	"Name": "Facet for SolidWorks",
+	"Version": "0.1.0.0",
+	"Author": "SW Robotics",
+	"URL": "https://swrobotics.com",
+	"UUID": "com.swrobotics.facet",
+	"Icon": "imgs/plugin/marketplace",
+	"SDKVersion": 2,
+	"Description": "Context-aware SolidWorks commands on your Stream Deck. The deck follows you — Part, Sketch, Assembly, and Drawing tools appear automatically as you work.",
+	"Category": "Facet for SolidWorks",
+	"CategoryIcon": "imgs/plugin/category",
+	"CodePath": "bin/plugin.js",
+	"Nodejs": {
+		"Version": "20",
+		"Debug": "enabled"
+	},
+	"Software": {
+		"MinimumVersion": "6.5"
+	},
+	"OS": [
+		{
+			"Platform": "windows",
+			"MinimumVersion": "10"
+		}
+	],
+	"Actions": [
+		{
+			"Name": "Facet Key",
+			"UUID": "com.swrobotics.facet.key",
+			"Icon": "imgs/actions/key/icon",
+			"Tooltip": "A context-aware SolidWorks key. Place this on every key of your MK.2; Facet decides what each one does based on what you're doing in SolidWorks.",
+			"Controllers": [
+				"Keypad"
+			],
+			"UserTitleEnabled": false,
+			"VisibleInActionsList": true,
+			"States": [
+				{
+					"Image": "imgs/actions/key/key",
+					"ShowTitle": false
+				}
+			]
+		}
+	]
+}

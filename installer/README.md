@@ -1,0 +1,53 @@
+# Facet installer
+
+Produces a single **`Facet-Setup-<version>.exe`** that installs both halves and wires them up:
+
+- copies and **COM-registers** the SolidWorks add-in (`RegAsm /codebase`, 64-bit) so SolidWorks
+  discovers it under **Tools ▸ Add-Ins**;
+- installs the **Stream Deck plugin** by handing the `.streamDeckPlugin` to the Stream Deck app;
+- detects SolidWorks and shows an Apple-like, one-screen finish.
+
+## Build it
+
+```powershell
+pwsh installer\build.ps1
+```
+
+`build.ps1` runs the whole pipeline: build plugin → generate icons → pack `.streamDeckPlugin` →
+build add-in → compile the installer.
+
+### Prerequisites
+
+| Step | Needs | Where |
+|------|-------|-------|
+| Plugin build + pack | Node 20+, `@elgato/cli` (`npm i -g @elgato/cli`) | any machine |
+| Add-in build | .NET SDK/MSBuild **+ SolidWorks 2026** (interop assemblies) | a SolidWorks workstation |
+| Compile installer | [Inno Setup 6](https://jrsoftware.org/isdl.php) (`ISCC.exe`) | the build machine |
+
+> The add-in references the SolidWorks interop DLLs from the local install, so **the installer
+> must be built on (or with access to) a SolidWorks 2026 machine.** The plugin half and the
+> `.streamDeckPlugin` can be built anywhere — use `build.ps1 -SkipAddin` to do just that (the
+> final installer step will then stop, by design, because `Facet.AddIn.dll` is required).
+
+## What the installer does at runtime
+
+1. Requires elevation (RegAsm writes `HKLM`; files go to `Program Files\Facet`).
+2. Installs `addin\` (the DLL + `Newtonsoft.Json.dll`) and `plugin\` (the `.streamDeckPlugin`).
+3. `RegAsm /codebase Facet.AddIn.dll` → the add-in's `[ComRegisterFunction]` writes the
+   SolidWorks load keys (`HKLM\SOFTWARE\SolidWorks\AddIns` + `HKCU\…\AddInsStartup`).
+4. Offers to open the `.streamDeckPlugin` so the Stream Deck app installs the plugin.
+5. **Uninstall** runs `RegAsm /unregister` and removes everything.
+
+## Files
+
+- `Facet.iss` — the Inno Setup script (the installer definition).
+- `build.ps1` — the end-to-end build orchestrator.
+- `out/` — build output: the packed `.streamDeckPlugin` and the final `Setup.exe` (git-ignored).
+
+## Notes / future
+
+- The SolidWorks-add-in registry default is `HKLM …\AddIns\{guid} = 0` with the per-user
+  `AddInsStartup = 1` driving auto-load (the canonical add-in convention).
+- A bundled Stream Deck **profile** (auto-populating all 15 keys) is planned for the Phase 3
+  polish pass; today the user drags the "Facet Key" action onto the keys once.
+- Code signing the `Setup.exe` and the add-in DLL is a future step before public distribution.

@@ -1,0 +1,21 @@
+# Node
+node_modules/
+plugin/*.sdPlugin/bin/
+plugin/dist/
+*.log
+npm-debug.log*
+
+# .NET
+addin/**/bin/
+addin/**/obj/
+*.user
+*.suo
+.vs/
+
+# Build artifacts
+installer/out/
+*.streamDeckPlugin
+
+# OS
+Thumbs.db
+.DS_Store
