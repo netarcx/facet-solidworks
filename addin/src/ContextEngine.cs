@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using SolidWorks.Interop.sldworks;
+using SolidWorks.Interop.swcommands;
 using SolidWorks.Interop.swconst;
 
 namespace Facet.AddIn

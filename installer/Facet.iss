@@ -14,7 +14,10 @@
 #define AppURL "https://github.com/netarcx/facet-solidworks"
 #define AddinDll "Facet.AddIn.dll"
 #define PluginFile "com.swrobotics.facet.streamDeckPlugin"
-#define AddinDir "..\addin\bin\x64\Release\net48"
+; AddinDir can be overridden by build.ps1 (ISCC /DAddinDir=...) with the real build output dir.
+#ifndef AddinDir
+  #define AddinDir "..\addin\bin\x64\Release\net48"
+#endif
 #define OutDir "out"
 
 [Setup]

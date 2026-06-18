@@ -51,3 +51,7 @@ build add-in → compile the installer.
 - A bundled Stream Deck **profile** (auto-populating all 15 keys) is planned for the Phase 3
   polish pass; today the user drags the "Facet Key" action onto the keys once.
 - Code signing the `Setup.exe` and the add-in DLL is a future step before public distribution.
+- **Interop bundling / cross-version:** the SolidWorks interop assemblies are copied next to the
+  add-in (Copy-Local) so `RegAsm` can load it at registration time (they aren't in the GAC). This
+  pins the build to the SolidWorks version on the **build machine**. For redistribution across
+  SolidWorks versions, build per-version or GAC the interops at install time instead.

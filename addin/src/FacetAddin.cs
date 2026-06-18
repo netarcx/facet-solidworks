@@ -95,7 +95,7 @@ namespace Facet.AddIn
             try
             {
                 string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Facet.log");
-                System.IO.File.AppendAllText(path, line + Environment.NewLine);
+                System.IO.File.AppendAllText(path, line + System.Environment.NewLine);
             }
             catch { }
         }

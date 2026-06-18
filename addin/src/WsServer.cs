@@ -217,8 +217,8 @@ namespace Facet.AddIn
             {
                 // Racing against CompleteAdding/Dispose is expected; swallow the resulting throw.
                 try { if (!_outbox.IsAddingCompleted) _outbox.Add(json); }
+                catch (ObjectDisposedException) { } // derives from InvalidOperationException — must come first
                 catch (InvalidOperationException) { }
-                catch (ObjectDisposedException) { }
             }
 
             /// <summary>Stop accepting new sends and let the send pump drain to completion.</summary>

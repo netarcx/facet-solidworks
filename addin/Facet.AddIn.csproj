@@ -41,22 +41,38 @@
     <Reference Include="SolidWorks.Interop.sldworks">
       <HintPath>$(SolidWorksPath)\api\redist\SolidWorks.Interop.sldworks.dll</HintPath>
       <EmbedInteropTypes>false</EmbedInteropTypes>
-      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+      <!-- Copy-local so RegAsm can load the add-in at registration time (no SolidWorks process,
+           and the interops aren't in the GAC). At runtime inside SolidWorks the already-loaded
+           interops of matching identity are used, so the local copies don't double-load. -->
+      <Private>true</Private>
     </Reference>
     <Reference Include="SolidWorks.Interop.swconst">
       <HintPath>$(SolidWorksPath)\api\redist\SolidWorks.Interop.swconst.dll</HintPath>
       <EmbedInteropTypes>false</EmbedInteropTypes>
-      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+      <!-- Copy-local so RegAsm can load the add-in at registration time (no SolidWorks process,
+           and the interops aren't in the GAC). At runtime inside SolidWorks the already-loaded
+           interops of matching identity are used, so the local copies don't double-load. -->
+      <Private>true</Private>
     </Reference>
     <Reference Include="SolidWorks.Interop.swpublished">
       <HintPath>$(SolidWorksPath)\api\redist\SolidWorks.Interop.swpublished.dll</HintPath>
       <EmbedInteropTypes>false</EmbedInteropTypes>
-      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+      <!-- Copy-local so RegAsm can load the add-in at registration time (no SolidWorks process,
+           and the interops aren't in the GAC). At runtime inside SolidWorks the already-loaded
+           interops of matching identity are used, so the local copies don't double-load. -->
+      <Private>true</Private>
     </Reference>
     <Reference Include="SolidWorks.Interop.swcommands">
       <HintPath>$(SolidWorksPath)\api\redist\SolidWorks.Interop.swcommands.dll</HintPath>
       <EmbedInteropTypes>false</EmbedInteropTypes>
-      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+      <!-- Copy-local so RegAsm can load the add-in at registration time (no SolidWorks process,
+           and the interops aren't in the GAC). At runtime inside SolidWorks the already-loaded
+           interops of matching identity are used, so the local copies don't double-load. -->
+      <Private>true</Private>
     </Reference>
   </ItemGroup>
 
