@@ -30,8 +30,11 @@ namespace Facet.AddIn
 
         public int Port { get; private set; }
 
-        /// <summary>Runs a command for an inbound invoke and reports success. Set by the add-in.</summary>
-        public Func<InboundMessage, bool>? OnInvoke { get; set; }
+        /// <summary>
+        /// Handles an inbound invoke. The handler replies asynchronously via the callback once the
+        /// command actually runs (RunCommand can block on its own UI, so we don't wait inline).
+        /// </summary>
+        public Action<InboundMessage, Action<bool, string?>>? OnInvoke { get; set; }
 
         /// <summary>Optional log sink (so the add-in can route to a file / debug output).</summary>
         public Action<string>? Log { get; set; }
@@ -176,12 +179,24 @@ namespace Facet.AddIn
                 return;
             }
 
-            // Invoke: run the command on the SolidWorks thread, then reply with the result.
-            bool ok = false;
-            string? error = null;
-            try { ok = OnInvoke?.Invoke(msg) ?? false; }
-            catch (Exception ex) { error = ex.Message; }
-            conn.Enqueue(WireProtocol.Result(msg.Nonce, ok, ok ? null : error ?? "Command did not run"));
+            // Invoke: hand to the command runner, which replies asynchronously once the command
+            // actually runs and we know its real result.
+            var handler = OnInvoke;
+            string nonce = msg.Nonce;
+            if (handler == null)
+            {
+                conn.Enqueue(WireProtocol.Result(nonce, false, "No command handler"));
+                return;
+            }
+            try
+            {
+                handler(msg, (ok, err) =>
+                    conn.Enqueue(WireProtocol.Result(nonce, ok, ok ? null : (err ?? "Command did not run"))));
+            }
+            catch (Exception ex)
+            {
+                conn.Enqueue(WireProtocol.Result(nonce, false, ex.Message));
+            }
         }
 
         public void Stop()

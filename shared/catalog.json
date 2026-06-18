@@ -11,9 +11,9 @@
       "title": "Welcome",
       "slots": [
         { "kind": "home", "label": "Facet" },
-        { "kind": "command", "label": "New Part", "swCommand": "swCommands_NewPart", "icon": "new-part" },
-        { "kind": "command", "label": "New Assembly", "swCommand": "swCommands_NewAssembly", "icon": "new-assembly" },
-        { "kind": "command", "label": "New Drawing", "swCommand": "swCommands_MakeDrawingFromPartAssembly", "icon": "new-drawing" },
+        { "kind": "command", "label": "New Part", "swCommand": "facet:newPart", "icon": "new-part" },
+        { "kind": "command", "label": "New Assembly", "swCommand": "facet:newAssembly", "icon": "new-assembly" },
+        { "kind": "command", "label": "New Drawing", "swCommand": "facet:newDrawing", "icon": "new-drawing" },
         { "kind": "command", "label": "Open", "swCommand": "swCommands_Open", "icon": "open" },
         { "kind": "empty" }, { "kind": "empty" }, { "kind": "info", "label": "Open a document\nto begin" }, { "kind": "empty" }, { "kind": "empty" },
         { "kind": "empty" }, { "kind": "empty" }, { "kind": "empty" }, { "kind": "empty" },

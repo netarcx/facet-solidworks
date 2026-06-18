@@ -1,13 +1,17 @@
 using System;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swcommands;
+using SolidWorks.Interop.swconst;
 
 namespace Facet.AddIn
 {
     /// <summary>
-    /// Runs SolidWorks commands on behalf of key presses. Resolves a <c>swCommands_e</c> enum name
-    /// to its integer id (with a raw-id fallback), then calls <see cref="ISldWorks.RunCommand"/> on
-    /// the SolidWorks main thread — i.e. it "presses the button the user would press".
+    /// Runs the action behind a key press on the SolidWorks (STA) thread and reports the real
+    /// result back via a callback. Two kinds of action:
+    ///  • <c>facet:*</c> — handled directly through the API (e.g. creating new documents, which
+    ///    <see cref="ISldWorks.RunCommand"/> can't do reliably).
+    ///  • <c>swCommands_*</c> — resolved to a <c>swCommands_e</c> id and run via RunCommand, i.e.
+    ///    "press the button the user would press".
     /// </summary>
     internal sealed class CommandRunner
     {
@@ -22,34 +26,74 @@ namespace Facet.AddIn
             _log = log;
         }
 
-        /// <summary>
-        /// Resolve and dispatch the command. Returns true once the command is handed to the
-        /// SolidWorks thread (RunCommand runs asynchronously there and may block on its own UI, so
-        /// we must NOT wait on it from the WebSocket thread). The actual RunCommand result is logged.
-        /// </summary>
-        public bool Run(InboundMessage invoke)
+        /// <summary>Dispatch the action; <paramref name="reply"/> is called with the real outcome.</summary>
+        public void Run(InboundMessage invoke, Action<bool, string?> reply)
         {
-            if (!TryResolveCommandId(invoke, out int id))
+            var command = invoke.Command;
+
+            if (!string.IsNullOrEmpty(command) && command!.StartsWith("facet:", StringComparison.Ordinal))
             {
-                _log($"Facet: command not resolved: '{invoke.Command}' (commandId={invoke.CommandId})");
-                return false;
+                _dispatcher.Post(() => SafeReply(reply, () => RunFacetAction(command), command));
+                return;
             }
 
-            _log($"Facet: dispatching '{invoke.Command}' (id={id}) to SolidWorks thread");
-            _dispatcher.Post(() =>
+            if (!TryResolveCommandId(invoke, out int id))
             {
-                try
-                {
-                    // Returns false if the command id is unknown or currently unavailable.
-                    bool ok = _app.RunCommand(id, string.Empty);
-                    _log($"Facet: RunCommand('{invoke.Command}', id={id}) returned {ok}");
-                }
-                catch (Exception ex)
-                {
-                    _log($"Facet: RunCommand('{invoke.Command}', id={id}) threw: {ex.Message}");
-                }
-            });
-            return true; // dispatched; execution happens asynchronously on the UI thread
+                _log($"Facet: command not resolved: '{command}' (commandId={invoke.CommandId})");
+                reply(false, $"Unknown command '{command}'");
+                return;
+            }
+
+            _log($"Facet: dispatching '{command}' (id={id}) to SolidWorks thread");
+            _dispatcher.Post(() => SafeReply(reply, () =>
+            {
+                // Returns false when the command is unavailable in the current context.
+                bool ok = _app.RunCommand(id, string.Empty);
+                _log($"Facet: RunCommand('{command}', id={id}) returned {ok}");
+                return ok;
+            }, command));
+        }
+
+        /// <summary>Runs <paramref name="action"/> on the UI thread and replies, never throwing out.</summary>
+        private void SafeReply(Action<bool, string?> reply, Func<bool> action, string? label)
+        {
+            try
+            {
+                bool ok = action();
+                reply(ok, ok ? null : "SolidWorks could not run this here");
+            }
+            catch (Exception ex)
+            {
+                _log($"Facet: action '{label}' threw: {ex.Message}");
+                reply(false, ex.Message);
+            }
+        }
+
+        /// <summary>Facet-native actions that don't map cleanly to a toolbar command.</summary>
+        private bool RunFacetAction(string command)
+        {
+            switch (command)
+            {
+                case "facet:newPart": return NewDocument(swUserPreferenceStringValue_e.swDefaultTemplatePart);
+                case "facet:newAssembly": return NewDocument(swUserPreferenceStringValue_e.swDefaultTemplateAssembly);
+                case "facet:newDrawing": return NewDocument(swUserPreferenceStringValue_e.swDefaultTemplateDrawing);
+                default:
+                    _log($"Facet: unknown facet action '{command}'");
+                    return false;
+            }
+        }
+
+        /// <summary>Creates a new document from the user's default template for that doc type.</summary>
+        private bool NewDocument(swUserPreferenceStringValue_e templatePref)
+        {
+            string template = _app.GetUserPreferenceStringValue((int)templatePref);
+            if (string.IsNullOrEmpty(template))
+            {
+                _log($"Facet: no default template set for {templatePref}");
+                return false;
+            }
+            object doc = _app.NewDocument(template, 0, 0, 0);
+            return doc != null;
         }
 
         private static bool TryResolveCommandId(InboundMessage invoke, out int id)

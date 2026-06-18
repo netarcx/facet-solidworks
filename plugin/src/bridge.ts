@@ -17,7 +17,7 @@ const PRIMARY_PORT = 8723;
 const PORT_RANGE = 11; // scan 8723..8733
 const HELLO_TIMEOUT_MS = 800;
 const RECONNECT_MS = 2000;
-const INVOKE_TIMEOUT_MS = 5000;
+const INVOKE_TIMEOUT_MS = 12000; // we now wait for the real RunCommand result, which loads UI
 const PLUGIN_VERSION = "0.1.0";
 
 type PendingResolver = (r: ResultMsg) => void;

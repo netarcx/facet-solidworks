@@ -42,5 +42,13 @@
 				}
 			]
 		}
+	],
+	"Profiles": [
+		{
+			"Name": "Facet",
+			"DeviceType": 0,
+			"Readonly": false,
+			"DontAutoSwitchWhenInstalled": false
+		}
 	]
 }
