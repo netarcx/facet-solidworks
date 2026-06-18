@@ -1,6 +1,6 @@
 {
   "name": "facet-streamdeck-plugin",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Facet — context-aware Stream Deck plugin for SolidWorks",
   "type": "module",
   "private": true,

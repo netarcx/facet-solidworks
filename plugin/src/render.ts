@@ -127,7 +127,10 @@ export function renderKey(b: Binding, opts: RenderOpts = {}): string {
 }
 
 function svg(inner: string): string {
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">${inner}</svg>`;
+	const doc = `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">${inner}</svg>`;
+	// Stream Deck reliably renders SVG only as a base64 data URI — a raw <svg> string is silently
+	// ignored by the app (the key then falls back to the manifest's default image).
+	return `data:image/svg+xml;base64,${Buffer.from(doc, "utf8").toString("base64")}`;
 }
 
 function glyph(name: string, color: string, top: number): string {
