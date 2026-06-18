@@ -85,25 +85,32 @@ class Controller {
 		if (!b) return;
 
 		if (b.kind === "command" || b.kind === "new") {
+			streamDeck.logger.info(`Invoke '${b.swCommand ?? b.commandId}' (slot ${slot}, layout '${this.#layoutKey}')`);
 			const result = await bridge.invoke({
 				command: b.swCommand,
 				commandId: b.commandId ?? null,
 				slot,
 				layout: this.#layoutKey,
 			});
+			streamDeck.logger.info(`  → ok=${result.ok}${result.message ? ` (${result.message})` : ""}`);
 			if (result.ok) await action.showOk();
 			else await action.showAlert();
 			return;
 		}
 
 		// Home (back) and More (overflow) are navigation affordances — wired up in a later phase.
-		if (b.kind === "more" || b.kind === "home") {
-			streamDeck.logger.debug(`Nav key '${b.kind}' pressed (slot ${slot}) — no-op in Phase 0.`);
-		}
+		streamDeck.logger.info(
+			`Key at slot ${slot} is '${b.kind}'${b.label ? ` (${b.label})` : ""} — no command bound here. ` +
+				`Command keys are the non-corner positions when a document is open.`,
+		);
 	}
 
 	#applyContext(ctx: ContextMsg): void {
 		this.#context = ctx;
+		streamDeck.logger.info(
+			`Context → layout='${ctx.layout}' doc='${ctx.docTitle || "(none)"}' ` +
+				`inSketch=${ctx.inSketch} sel=${ctx.selection.count} | ${this.#keys.size}/15 keys placed`,
+		);
 		this.#setLayout(ctx.layout);
 	}
 
