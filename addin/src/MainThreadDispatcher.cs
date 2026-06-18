@@ -51,15 +51,17 @@ namespace Facet.AddIn
         /// like RunCommand that may not return until the user dismisses a PropertyManager page —
         /// blocking the caller on those would stall the WebSocket pump.
         /// </summary>
-        public void Post(Action action)
+        /// <summary>Returns false if the work could not be dispatched (e.g. during shutdown).</summary>
+        public bool Post(Action action)
         {
-            if (_marshal.IsDisposed || !_marshal.IsHandleCreated) return;
+            if (_marshal.IsDisposed || !_marshal.IsHandleCreated) return false;
             try
             {
                 _marshal.BeginInvoke(action);
+                return true;
             }
-            catch (ObjectDisposedException) { }
-            catch (InvalidOperationException) { }
+            catch (ObjectDisposedException) { return false; }
+            catch (InvalidOperationException) { return false; }
         }
 
         public void Dispose()

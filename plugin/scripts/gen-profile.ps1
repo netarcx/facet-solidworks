@@ -22,7 +22,7 @@ foreach ($row in 0..2) {
       ActionID    = [guid]::NewGuid().ToString()
       LinkedTitle = $true
       Name        = "Facet Key"
-      Plugin      = [ordered]@{ Name = "Facet for SolidWorks"; UUID = "com.swrobotics.facet"; Version = "0.1.0.0" }
+      Plugin      = [ordered]@{ Name = "Facet for SolidWorks"; UUID = "com.swrobotics.facet"; Version = "0.2.0.0" }
       Resources   = $null
       Settings    = @{}
       State       = 0

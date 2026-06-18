@@ -4,7 +4,7 @@ import { FacetKey } from "./actions/facet-key";
 import { bridge } from "./bridge";
 import { controller } from "./controller";
 
-streamDeck.logger.setLevel(LogLevel.DEBUG);
+streamDeck.logger.setLevel(LogLevel.INFO);
 
 // Register the one action that fills every key.
 streamDeck.actions.registerAction(new FacetKey());

@@ -20,7 +20,7 @@
     <AssemblyTitle>Facet for SolidWorks</AssemblyTitle>
     <Product>Facet</Product>
     <Company>SW Robotics</Company>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <!-- COM registration is driven by our [ComRegisterFunction]; don't let the SDK self-host. -->

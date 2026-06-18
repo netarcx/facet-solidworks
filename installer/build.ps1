@@ -85,6 +85,7 @@ Push-Location (Join-Path $root "plugin")
 try {
   npm install
   npm run icons
+  npm run profile
   npm run build
 } finally { Pop-Location }
 

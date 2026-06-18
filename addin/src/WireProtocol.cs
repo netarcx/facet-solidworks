@@ -8,13 +8,13 @@ namespace Facet.AddIn
     {
         public const int Protocol = 1;
 
-        public static string Hello(int port, string addinVersion) =>
+        public static string Hello(int port, string addinVersion, string appVersion) =>
             JsonConvert.SerializeObject(new
             {
                 v = 1,
                 type = "hello",
                 app = "SolidWorks",
-                appVersion = "2026",
+                appVersion,
                 port,
                 protocol = Protocol,
                 addinVersion,

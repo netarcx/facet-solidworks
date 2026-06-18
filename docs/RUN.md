@@ -1,7 +1,7 @@
 # Running Facet
 
 Two halves: the **plugin** (Node, runs anywhere with the Stream Deck app) and the **add-in**
-(C# COM, builds + runs on a SolidWorks 2026 workstation). You can develop and demo the entire
+(C# COM, builds + runs on a SolidWorks 2024+ workstation). You can develop and demo the entire
 deck experience using the **mock add-in** — no SolidWorks required.
 
 ---
@@ -21,8 +21,8 @@ npm run build                 # → com.swrobotics.facet.sdPlugin/bin/plugin.js
 streamdeck link com.swrobotics.facet.sdPlugin
 streamdeck restart com.swrobotics.facet
 
-# 3. In the Stream Deck app, drag the "Facet Key" action onto all 15 keys.
-#    (A bundled profile that does this automatically lands in the Phase 3 polish pass.)
+# 3. Apply the bundled "Facet" profile (the deck auto-fills all 15 keys), or drag the
+#    "Facet Key" action onto keys manually. The profile installs with the .streamDeckPlugin.
 
 # 4. In a second terminal, play SolidWorks:
 cd ../tools
@@ -38,9 +38,9 @@ and pressing a command key logs an `invoke` in the mock terminal and flashes ✓
 
 ---
 
-## B. Build + register the add-in on a SolidWorks 2026 workstation
+## B. Build + register the add-in on a SolidWorks 2024+ workstation
 
-Requirements: SolidWorks 2026 installed, .NET SDK (or MSBuild/Visual Studio), admin rights for
+Requirements: SolidWorks 2024+ installed, .NET SDK (or MSBuild/Visual Studio), admin rights for
 COM registration.
 
 ```powershell
@@ -60,7 +60,7 @@ C:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /unregister `
 ```
 
 Then launch SolidWorks → **Tools ▸ Add-Ins** → confirm **Facet** is listed and checked. The
-add-in starts its WebSocket server on `ws://127.0.0.1:8723`. Start the plugin (section A, steps
+add-in starts its WebSocket server on `ws://localhost:8723`. Start the plugin (section A, steps
 1–3) and it connects automatically. Diagnostic log: `%TEMP%\Facet.log`.
 
 > The add-in references the interop DLLs from `…\SOLIDWORKS\api\redist` with

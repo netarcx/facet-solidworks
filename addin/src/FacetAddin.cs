@@ -49,12 +49,21 @@ namespace Facet.AddIn
                     OnInvoke = runner.Run,
                     Log = LogToSolidWorks,
                 };
-                _server.Start(Version);
+
+                string swVersion = "unknown";
+                try { swVersion = _app.RevisionNumber() ?? "unknown"; } catch { }
+
+                if (!_server.Start(Version, swVersion))
+                {
+                    // The deck can never connect if we couldn't bind — tell the user, don't fail silently.
+                    try { _app.SendMsgToUser2("Facet could not open its local connection (ports 8723–8733 are all in use). The Stream Deck won't connect until this is resolved.", 0, 0); }
+                    catch { }
+                }
 
                 _engine = new ContextEngine(_app, _dispatcher, OnContextChanged);
                 _engine.Start();
 
-                LogToSolidWorks("Facet connected.");
+                LogToSolidWorks($"Facet connected (SolidWorks {swVersion}).");
                 return true;
             }
             catch (Exception ex)
@@ -95,6 +104,10 @@ namespace Facet.AddIn
             try
             {
                 string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Facet.log");
+                // Cap the log so it can't grow without bound; start fresh past ~1 MB.
+                var info = new System.IO.FileInfo(path);
+                if (info.Exists && info.Length > 1_000_000)
+                    System.IO.File.WriteAllText(path, $"{DateTime.Now:HH:mm:ss.fff}  Facet: log rotated{System.Environment.NewLine}");
                 System.IO.File.AppendAllText(path, line + System.Environment.NewLine);
             }
             catch { }

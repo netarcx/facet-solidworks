@@ -33,7 +33,8 @@ namespace Facet.AddIn
 
             if (!string.IsNullOrEmpty(command) && command!.StartsWith("facet:", StringComparison.Ordinal))
             {
-                _dispatcher.Post(() => SafeReply(reply, () => RunFacetAction(command), command));
+                if (!_dispatcher.Post(() => SafeReply(reply, () => RunFacetAction(command), command)))
+                    reply(false, "SolidWorks is busy or shutting down");
                 return;
             }
 
@@ -45,13 +46,18 @@ namespace Facet.AddIn
             }
 
             _log($"Facet: dispatching '{command}' (id={id}) to SolidWorks thread");
-            _dispatcher.Post(() => SafeReply(reply, () =>
+            // Guarantee a reply: if the work can't be marshaled, the plugin would otherwise wait
+            // out its full timeout.
+            if (!_dispatcher.Post(() => SafeReply(reply, () =>
             {
                 // Returns false when the command is unavailable in the current context.
                 bool ok = _app.RunCommand(id, string.Empty);
                 _log($"Facet: RunCommand('{command}', id={id}) returned {ok}");
                 return ok;
-            }, command));
+            }, command)))
+            {
+                reply(false, "SolidWorks is busy or shutting down");
+            }
         }
 
         /// <summary>Runs <paramref name="action"/> on the UI thread and replies, never throwing out.</summary>
@@ -89,12 +95,21 @@ namespace Facet.AddIn
             string template = _app.GetUserPreferenceStringValue((int)templatePref);
             if (string.IsNullOrEmpty(template))
             {
-                _log($"Facet: no default template set for {templatePref}");
-                return false;
+                // Surfaced to the deck so the user knows it's a one-time SolidWorks config issue.
+                throw new InvalidOperationException(
+                    $"No default {DocLabel(templatePref)} template set — pick one in SolidWorks ▸ Tools ▸ Options ▸ Default Templates.");
             }
             object doc = _app.NewDocument(template, 0, 0, 0);
             return doc != null;
         }
+
+        private static string DocLabel(swUserPreferenceStringValue_e pref) => pref switch
+        {
+            swUserPreferenceStringValue_e.swDefaultTemplatePart => "Part",
+            swUserPreferenceStringValue_e.swDefaultTemplateAssembly => "Assembly",
+            swUserPreferenceStringValue_e.swDefaultTemplateDrawing => "Drawing",
+            _ => "document",
+        };
 
         private static bool TryResolveCommandId(InboundMessage invoke, out int id)
         {

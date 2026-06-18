@@ -26,6 +26,7 @@ namespace Facet.AddIn
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private HttpListener? _listener;
         private string _addinVersion = "0.0.0";
+        private string _solidWorksVersion = "unknown";
         private volatile string? _latestContext;
 
         public int Port { get; private set; }
@@ -39,17 +40,20 @@ namespace Facet.AddIn
         /// <summary>Optional log sink (so the add-in can route to a file / debug output).</summary>
         public Action<string>? Log { get; set; }
 
-        public void Start(string addinVersion)
+        /// <summary>Starts the server. Returns false if no port in the range could be bound.</summary>
+        public bool Start(string addinVersion, string solidWorksVersion)
         {
             _addinVersion = addinVersion;
+            _solidWorksVersion = solidWorksVersion;
             _listener = BindAnyPort();
             if (_listener == null)
             {
                 Log?.Invoke($"Facet: could not bind any port in {PrimaryPort}..{PrimaryPort + PortRange - 1}.");
-                return;
+                return false;
             }
             Log?.Invoke($"Facet: WebSocket server listening on ws://localhost:{Port}");
             _ = Task.Run(AcceptLoopAsync);
+            return true;
         }
 
         private HttpListener? BindAnyPort()
@@ -116,7 +120,7 @@ namespace Facet.AddIn
             {
                 // Greet, then send the latest context (or an empty one) so the deck paints at once,
                 // even if SolidWorks hasn't changed state since startup.
-                conn.Enqueue(WireProtocol.Hello(Port, _addinVersion));
+                conn.Enqueue(WireProtocol.Hello(Port, _addinVersion, _solidWorksVersion));
                 conn.Enqueue(_latestContext ?? WireProtocol.Context(ContextState.Empty));
 
                 send = conn.SendPumpAsync();

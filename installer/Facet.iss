@@ -9,7 +9,7 @@
 ; (after building the add-in and packing the plugin — both are prerequisites; see build.ps1).
 
 #define AppName "Facet for SolidWorks"
-#define AppVersion "0.1.0"
+#define AppVersion "0.2.0"
 #define AppPublisher "SW Robotics"
 #define AppURL "https://github.com/netarcx/facet-solidworks"
 #define AddinDll "Facet.AddIn.dll"

@@ -1,6 +1,6 @@
 {
   "name": "facet-streamdeck-plugin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Facet — context-aware Stream Deck plugin for SolidWorks",
   "type": "module",
   "private": true,
@@ -8,7 +8,8 @@
     "build": "rollup -c",
     "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.swrobotics.facet\"",
     "typecheck": "tsc --noEmit",
-    "icons": "node scripts/gen-icons.mjs"
+    "icons": "node scripts/gen-icons.mjs",
+    "profile": "pwsh -NoProfile -File scripts/gen-profile.ps1"
   },
   "dependencies": {
     "@elgato/streamdeck": "^1.0.0",
