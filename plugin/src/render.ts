@@ -1,10 +1,9 @@
 /**
- * Renders a key to an SVG string for KeyAction.setImage.
+ * Renders a key's IMAGE (icon + background) to a base64 SVG data URI for KeyAction.setImage.
  *
- * Phase 0 ships a consistent, tokenized visual language: a dark tile, one accent, one stroke
- * weight, a line glyph where we have one, and a clean label. Bespoke per-command artwork layers
- * in later — the catalog already names an `icon` per binding so art can drop in without code
- * changes.
+ * The key's NAME is NOT drawn here — Stream Deck's image rasterizer drops SVG <text>, so the
+ * label is set via the native key title (see controller.setTitle). This module owns the dark
+ * tile, the one accent, the one stroke weight, and the line glyph.
  */
 import { tokens } from "./catalog";
 import type { Binding } from "./types";
@@ -71,59 +70,63 @@ const GLYPHS: Record<string, string> = {
 
 const FALLBACK_GLYPH = "M12 12 m-7 0 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0"; // neutral ring
 
+// Glyph sits in the upper portion so it never collides with the bottom-aligned native title.
+const GLYPH_TOP = 26;
+
 interface RenderOpts {
-	/** Overrides the binding label (e.g. Home shows the live document/context title). */
-	label?: string;
 	/** Toggle is currently "on" — paints the active accent. */
 	active?: boolean;
 }
 
-/** Returns a full SVG document string suitable for KeyAction.setImage. */
+/** Returns a base64 SVG data URI (icon + background only) for KeyAction.setImage. */
 export function renderKey(b: Binding, opts: RenderOpts = {}): string {
-	const label = opts.label ?? b.label ?? "";
-
-	let bg = C.canvasRaised;
-	let fg = C.ink;
-	let glyphColor = C.inkMuted;
-
 	if (b.kind === "empty") {
 		return svg(`<rect width="${SIZE}" height="${SIZE}" fill="${C.canvas}"/>`);
 	}
+
+	let bg = C.canvasRaised;
+	let glyphColor = C.inkMuted;
 	if (b.commit) {
 		bg = C.commit;
-		fg = glyphColor = C.accentInk;
+		glyphColor = C.accentInk;
 	} else if (b.toggle && opts.active) {
 		bg = C.toggleOn;
-		fg = glyphColor = C.toggleOnInk;
+		glyphColor = C.toggleOnInk;
 	} else if (b.accent) {
 		bg = C.accent;
-		fg = glyphColor = C.accentInk;
+		glyphColor = C.accentInk;
 	} else if (b.kind === "home") {
-		fg = C.ink;
 		glyphColor = C.accent;
-	} else if (b.kind === "info") {
-		fg = C.inkMuted;
 	}
 
-	const parts: string[] = [];
-	parts.push(`<rect x="2" y="2" width="${SIZE - 4}" height="${SIZE - 4}" rx="${tokens.key.radius}" fill="${bg}"/>`);
+	const parts: string[] = [`<rect x="2" y="2" width="${SIZE - 4}" height="${SIZE - 4}" rx="${tokens.key.radius}" fill="${bg}"/>`];
 
 	if (b.kind === "home") {
 		parts.push(homeMark(glyphColor));
-		parts.push(textBlock(label, fg, { y: 96, size: tokens.type.homeTitleSize, weight: 700 }));
 	} else if (b.kind === "more") {
-		parts.push(dots(fg));
-		parts.push(textBlock(label || "More", fg, { y: 112, size: 13, weight: 600 }));
+		parts.push(dots(glyphColor));
 	} else if (b.kind === "info") {
-		parts.push(textBlock(label, fg, { y: 78, size: 14, weight: 600 }));
+		// Background only — the native title carries the message.
 	} else {
-		const hasLabel = label.length > 0;
-		if (b.icon) parts.push(glyph(b.icon, glyphColor, hasLabel ? 30 : 44));
-		parts.push(textBlock(label, fg, { y: 118, size: tokens.type.labelSize, weight: tokens.type.labelWeight }));
+		parts.push(glyph(b.icon ?? "", glyphColor));
 		if (b.toggle && opts.active) parts.push(`<circle cx="${SIZE - 18}" cy="18" r="5" fill="${C.toggleOnInk}"/>`);
 	}
 
 	return svg(parts.join(""));
+}
+
+/** The human-readable name Stream Deck should show as the key's native title. */
+export function titleFor(b: Binding, homeLabel: string): string {
+	switch (b.kind) {
+		case "empty":
+			return "";
+		case "home":
+			return homeLabel;
+		case "more":
+			return b.label ?? "More";
+		default:
+			return b.label ?? ""; // command / new / info
+	}
 }
 
 function svg(inner: string): string {
@@ -133,12 +136,13 @@ function svg(inner: string): string {
 	return `data:image/svg+xml;base64,${Buffer.from(doc, "utf8").toString("base64")}`;
 }
 
-function glyph(name: string, color: string, top: number): string {
+function glyph(name: string, color: string): string {
 	const d = GLYPHS[name] ?? FALLBACK_GLYPH;
-	const scale = tokens.key.iconSize / 24;
-	const x = (SIZE - tokens.key.iconSize) / 2;
+	const size = tokens.key.iconSize;
+	const scale = size / 24;
+	const x = (SIZE - size) / 2;
 	return (
-		`<g transform="translate(${x} ${top}) scale(${scale})" fill="none" stroke="${color}" ` +
+		`<g transform="translate(${x} ${GLYPH_TOP}) scale(${scale})" fill="none" stroke="${color}" ` +
 		`stroke-width="${tokens.stroke.weight}" stroke-linecap="${tokens.stroke.cap}" ` +
 		`stroke-linejoin="${tokens.stroke.join}"><path d="${d}"/></g>`
 	);
@@ -147,69 +151,12 @@ function glyph(name: string, color: string, top: number): string {
 /** A small faceted-gem mark for the Home key. */
 function homeMark(color: string): string {
 	return (
-		`<g transform="translate(52 28)" fill="none" stroke="${color}" stroke-width="2.5" ` +
+		`<g transform="translate(52 26)" fill="none" stroke="${color}" stroke-width="2.5" ` +
 		`stroke-linejoin="round"><path d="M20 4 L36 16 L20 36 L4 16 Z M4 16 H36 M20 4 V36 M12 10 L20 16 L28 10"/></g>`
 	);
 }
 
 function dots(color: string): string {
-	const cy = 64;
+	const cy = 52;
 	return [52, 72, 92].map((cx) => `<circle cx="${cx}" cy="${cy}" r="4.5" fill="${color}"/>`).join("");
-}
-
-/** Centered, wrapped, multi-line text anchored at baseline `y`. */
-function textBlock(text: string, color: string, o: { y: number; size: number; weight: number }): string {
-	const lines = wrap(text);
-	const lh = o.size * 1.18;
-	const startY = o.y - (lines.length - 1) * lh;
-	const tspans = lines
-		.map((ln, i) => `<tspan x="${SIZE / 2}" y="${startY + i * lh}">${escapeXml(ln)}</tspan>`)
-		.join("");
-	return (
-		`<text text-anchor="middle" font-family="${escapeXml(tokens.type.family)}" ` +
-		`font-size="${o.size}" font-weight="${o.weight}" letter-spacing="${tokens.type.tracking}" ` +
-		`fill="${color}">${tspans}</text>`
-	);
-}
-
-const MAX_CHARS = 10;
-const MAX_LINES = 3;
-
-/**
- * Honors explicit newlines, greedily wraps to ~MAX_CHARS/line, HARD-breaks any single word longer
- * than a line (so "Transparency" can't overflow the tile), and ellipsizes if it exceeds 3 lines.
- */
-function wrap(text: string): string[] {
-	const out: string[] = [];
-	for (const segment of text.split("\n")) {
-		let line = "";
-		for (const word of segment.split(" ")) {
-			let w = word;
-			// Break an over-long single word across lines.
-			while (w.length > MAX_CHARS) {
-				if (line) {
-					out.push(line);
-					line = "";
-				}
-				out.push(w.slice(0, MAX_CHARS));
-				w = w.slice(MAX_CHARS);
-			}
-			const candidate = line ? `${line} ${w}` : w;
-			if (candidate.length > MAX_CHARS && line) {
-				out.push(line);
-				line = w;
-			} else {
-				line = candidate;
-			}
-		}
-		if (line) out.push(line);
-	}
-	if (out.length <= MAX_LINES) return out;
-	const kept = out.slice(0, MAX_LINES);
-	kept[MAX_LINES - 1] = kept[MAX_LINES - 1].slice(0, MAX_CHARS - 1) + "…";
-	return kept;
-}
-
-function escapeXml(s: string): string {
-	return s.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" })[c]!);
 }

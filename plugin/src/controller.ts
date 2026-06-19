@@ -8,7 +8,7 @@
 import streamDeck, { type KeyAction } from "@elgato/streamdeck";
 import { bridge } from "./bridge";
 import { resolveLayout, SLOTS } from "./catalog";
-import { renderKey } from "./render";
+import { renderKey, titleFor } from "./render";
 import type { Binding, ContextMsg, Layout } from "./types";
 
 class Controller {
@@ -128,9 +128,9 @@ class Controller {
 		const action = this.#keys.get(slot);
 		const b = this.#layout.slots[slot];
 		if (!action || !b) return;
-		const label = b.kind === "home" ? this.#homeLabel(b) : undefined;
-		await action.setImage(renderKey(b, { label }));
-		await action.setTitle(""); // we paint labels into the image ourselves
+		// The icon is the image; the name is Stream Deck's native title (SVG <text> isn't rendered).
+		await action.setImage(renderKey(b));
+		await action.setTitle(titleFor(b, this.#homeLabel(b)));
 	}
 
 	/** Home key shows the live context — falls back to the layout's name. */

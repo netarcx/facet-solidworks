@@ -22,13 +22,13 @@ foreach ($row in 0..2) {
       ActionID    = [guid]::NewGuid().ToString()
       LinkedTitle = $true
       Name        = "Facet Key"
-      Plugin      = [ordered]@{ Name = "Facet for SolidWorks"; UUID = "com.swrobotics.facet"; Version = "0.2.2.0" }
+      Plugin      = [ordered]@{ Name = "Facet for SolidWorks"; UUID = "com.swrobotics.facet"; Version = "0.3.0.0" }
       Resources   = $null
       Settings    = @{}
       State       = 0
       States      = @([ordered]@{
-          FontFamily = ""; FontSize = 12; FontStyle = ""; FontUnderline = $false
-          OutlineThickness = 2; ShowTitle = $false; TitleAlignment = "bottom"; TitleColor = "#ffffff"
+          FontFamily = ""; FontSize = 13; FontStyle = ""; FontUnderline = $false
+          OutlineThickness = 2; ShowTitle = $true; TitleAlignment = "bottom"; TitleColor = "#F2F5F8"
         })
       UUID        = "com.swrobotics.facet.key"
     }
