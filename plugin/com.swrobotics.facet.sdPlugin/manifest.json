@@ -39,7 +39,7 @@
 					"Image": "imgs/actions/key/key",
 					"TitleAlignment": "bottom",
 					"TitleColor": "#F2F5F8",
-					"FontSize": "13",
+					"FontSize": 13,
 					"ShowTitle": true
 				}
 			]

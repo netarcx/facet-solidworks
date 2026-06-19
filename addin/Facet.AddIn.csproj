@@ -3,7 +3,7 @@
   <!--
     Facet SolidWorks add-in. In-process COM (ISwAddin), .NET Framework 4.8, x64.
 
-    Builds on a machine with SolidWorks 2026 installed. If SolidWorks is not at the default
+    Builds on a machine with SolidWorks 2024+ installed. If SolidWorks is not at the default
     location, override the path, e.g.:
         dotnet build -c Release -p:SolidWorksPath="D:\Apps\SOLIDWORKS Corp\SOLIDWORKS"
     Then register for COM (run from an x64 Developer prompt as admin):
@@ -20,7 +20,7 @@
     <AssemblyTitle>Facet for SolidWorks</AssemblyTitle>
     <Product>Facet</Product>
     <Company>SW Robotics</Company>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <!-- COM registration is driven by our [ComRegisterFunction]; don't let the SDK self-host. -->

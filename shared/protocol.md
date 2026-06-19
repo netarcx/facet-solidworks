@@ -19,7 +19,7 @@ echoed in `hello.port` for logging.
 
 ### `hello` — sent immediately on connect
 ```json
-{ "v": 1, "type": "hello", "app": "SolidWorks", "appVersion": "2026", "port": 8723,
+{ "v": 1, "type": "hello", "app": "SolidWorks", "appVersion": "33.5.0", "port": 8723,
   "protocol": 1, "addinVersion": "0.1.0" }
 ```
 

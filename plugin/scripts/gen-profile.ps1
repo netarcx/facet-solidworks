@@ -19,7 +19,7 @@ $actions = [ordered]@{}
 foreach ($row in 0..2) {
   foreach ($col in 0..4) {
     $actions["$col,$row"] = [ordered]@{
-      ActionID    = [guid]::NewGuid().ToString()
+      ActionID    = "facecafe-0000-4000-8000-{0:x12}" -f ($row * 5 + $col)  # deterministic per slot
       LinkedTitle = $true
       Name        = "Facet Key"
       Plugin      = [ordered]@{ Name = "Facet for SolidWorks"; UUID = "com.swrobotics.facet"; Version = "0.3.0.0" }

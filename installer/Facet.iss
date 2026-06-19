@@ -9,7 +9,7 @@
 ; (after building the add-in and packing the plugin — both are prerequisites; see build.ps1).
 
 #define AppName "Facet for SolidWorks"
-#define AppVersion "0.2.0"
+#define AppVersion "0.3.0"
 #define AppPublisher "SW Robotics"
 #define AppURL "https://github.com/netarcx/facet-solidworks"
 #define AddinDll "Facet.AddIn.dll"
@@ -85,7 +85,7 @@ begin
   if not SolidWorksInstalled() then
   begin
     if MsgBox('SolidWorks was not detected on this PC.' + #13#10 + #13#10 +
-              'Facet needs SolidWorks 2026 to do its thing. You can install Facet now and add ' +
+              'Facet needs SolidWorks (2024 or newer) to do its thing. You can install Facet now and add ' +
               'SolidWorks later.' + #13#10 + #13#10 +
               'Continue with installation?', mbConfirmation, MB_YESNO) = IDNO then
       Result := False;
